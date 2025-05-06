@@ -1,1 +1,71 @@
+import numpy as np
 
+def orthogonalize(vector_list):
+    basis = []
+    
+    for current_vec in vector_list:
+        v = np.array(current_vec, dtype=np.float64)
+        u = v.copy()
+        
+        for b in basis:
+            u -= np.dot(u, b) * b
+            
+        norm = np.sqrt(np.sum(u**2))
+        if norm > 1e-14:
+            basis.append(u / norm)
+            
+    return basis
+
+if __name__ == "__main__":
+    input_vectors = [
+        [1, 1, 0],
+        [1, 0, 1],
+        [0, 1, 1],
+        [2, 2, 2]
+    ]
+    
+    result = orthogonalize(input_vectors)
+    
+    print("Orthogonal basis vectors:")
+    for idx, vec in enumerate(result, start=1):
+        print(f"Vector {idx}: {np.round(vec, 8)}")
+
+
+
+
+//task 2 
+import numpy as np
+
+def compute_orthogonal_vectors(mat):
+    u, sigma, vh = np.linalg.svd(mat)
+    rank = np.count_nonzero(sigma > 1e-14)
+    null_vector = vh[rank:][0]
+    
+    u2, sigma2, vh2 = np.linalg.svd(mat.T)
+    rank2 = np.count_nonzero(sigma2 > 1e-14)
+    left_null_vector = vh2[rank2:][0]
+    
+    row_space_vector = mat[0]
+    
+    return null_vector, left_null_vector, row_space_vector
+
+matrix = np.array([
+    [1, 2, 1],
+    [2, 4, 3],
+    [3, 6, 4]
+], dtype=np.float64)
+
+x, y, z = compute_orthogonal_vectors(matrix)
+
+print("Matrix:\n", matrix)
+print("\nNull space vector x:\n", np.round(x, 10))
+print("\nLeft null space vector y:\n", np.round(y, 10))
+print("\nRow space vector z:\n", z)
+
+print("\nRow orthogonality checks:")
+[print(f"Row {i+1}: {np.dot(row, x):.1e}") for i, row in enumerate(matrix)]
+
+print("\nColumn orthogonality checks:")
+[print(f"Col {j+1}: {np.dot(matrix[:,j], y):.1e}") for j in range(matrix.shape[1])]
+
+print("\nNull-row space orthogonality:", f"{np.dot(x, z):.1e}")
