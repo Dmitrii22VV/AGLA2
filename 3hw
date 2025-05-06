@@ -1,0 +1,109 @@
+def reduced_row_echelon(matrix, tolerance=1e-12):
+    mat = [r[:] for r in matrix]
+    rows = len(mat)
+    if rows == 0:
+        return mat, []
+    cols = len(mat[0])
+
+    pivots = []
+    current_row = 0
+
+    for col in range(cols):
+        pivot_pos = None
+        for r in range(current_row, rows):
+            if abs(mat[r][col]) > tolerance:
+                pivot_pos = r
+                break
+        
+        if pivot_pos is None:
+            continue
+
+        mat[current_row], mat[pivot_pos] = mat[pivot_pos], mat[current_row]
+
+        pivot_val = mat[current_row][col]
+        mat[current_row] = [x / pivot_val for x in mat[current_row]]
+
+        for r in range(rows):
+            if r != current_row:
+                f = mat[r][col]
+                mat[r] = [v - f * mat[current_row][i] for i, v in enumerate(mat[r])]
+
+        pivots.append(col)
+        current_row += 1
+
+        if current_row == rows:
+            break
+
+    return mat, pivots
+
+def row_basis(rref_matrix):
+    return [r for r in rref_matrix if any(abs(x) > 1e-12 for x in r)]
+
+def column_basis(original_matrix, pivot_columns):
+    return [[row[c] for row in original_matrix] for c in pivot_columns]
+
+def null_space_basis(original, rref_mat, pivot_cols, eps=1e-12):
+    rows = len(rref_mat)
+    if rows == 0:
+        return []
+    cols = len(rref_mat[0])
+
+    pivot_set = set(pivot_cols)
+    free_cols = [c for c in range(cols) if c not in pivot_set]
+    basis = []
+
+    for free in free_cols:
+        vec = [0] * cols
+        vec[free] = 1
+
+        for i, pcol in enumerate(pivot_cols):
+            vec[pcol] = -sum(rref_mat[i][j] * vec[j] for j in range(cols) if j != pcol)
+
+        basis.append(vec)
+
+    return basis
+
+def matrix_transpose(m):
+    return [list(x) for x in zip(*m)] if m else []
+
+def compute_subspaces(m):
+    rref_mat, pivots = reduced_row_echelon(m)
+    
+    col_basis = column_basis(m, pivots)
+    row_basis_mat = row_basis(rref_mat)
+    null_basis = null_space_basis(m, rref_mat, pivots)
+    
+    transposed = matrix_transpose(m)
+    rref_transposed, transposed_pivots = reduced_row_echelon(transposed)
+    left_null_basis = null_space_basis(transposed, rref_transposed, transposed_pivots)
+    
+    return col_basis, row_basis_mat, null_basis, left_null_basis
+
+if __name__ == "__main__":
+    example_matrix = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+
+    cs, rs, ns, lns = compute_subspaces(example_matrix)
+
+    print("Original:")
+    for r in example_matrix:
+        print(r)
+
+    print("\nColumn Basis:")
+    for v in cs:
+        print(v)
+
+    print("\nRow Basis:")
+    for v in rs:
+        print(v)
+
+    print("\nNull Space Basis:")
+    for v in ns:
+        print(v)
+
+    print("\nLeft Null Space Basis:")
+    for v in lns:
+        print(v)
