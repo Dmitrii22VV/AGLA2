@@ -1,0 +1,66 @@
+import os
+import numpy as np
+import matplotlib
+from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
+
+def configure_backend():
+    matplotlib.use("Agg" if os.environ.get("DISPLAY", "") == "" else "TkAgg")
+
+def van_der_pol(t, state, mu):
+    x, y = state
+    return [y, mu * (1.0 - x**2) * y - x]
+
+def simulate_oscillator():
+    params = {
+        'mu': 1.0,
+        't_span': (0, 20),
+        'initial_state': [2.0, 0.0],
+        'time_points': np.linspace(0, 20, 600)
+    }
+    
+    solution = solve_ivp(
+        van_der_pol,
+        params['t_span'],
+        params['initial_state'],
+        args=(params['mu'],),
+        t_eval=params['time_points'],
+        rtol=1e-8,
+        atol=1e-10
+    )
+    return solution
+
+def create_plots(solution):
+    plt.figure(figsize=(12, 5))
+    
+    plt.subplot(1, 2, 1)
+    plt.plot(solution.t, solution.y[0])
+    plt.xlabel("Time (t)")
+    plt.ylabel("Displacement (x)")
+    plt.title("Time Domain Response")
+    plt.grid(True)
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(solution.y[0], solution.y[1])
+    plt.xlabel("Displacement (x)")
+    plt.ylabel("Velocity (dx/dt)")
+    plt.title("Phase Portrait")
+    plt.grid(True)
+    
+    return plt
+
+def save_or_display(plotter):
+    if matplotlib.get_backend() == "Agg":
+        plotter.savefig("vdp_results.png", dpi=150)
+        print("Saved results to vdp_results.png")
+    else:
+        plotter.show()
+
+def main():
+    configure_backend()
+    results = simulate_oscillator()
+    plot = create_plots(results)
+    save_or_display(plot)
+
+if __name__ == "__main__":
+    main()
