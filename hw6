@@ -1,0 +1,46 @@
+import sympy as sp
+
+def get_matrix_size():
+    while True:
+        try:
+            size = int(input("Matrix dimension (N ≥ 3): "))
+            return size if size >= 3 else print("Size must be ≥3")
+        except ValueError:
+            print("Enter an integer")
+
+def build_matrix(n):
+    m = []
+    for i in range(n):
+        while True:
+            elements = input(f"Row {i+1} ({n} elements): ").split()
+            if len(elements) != n:
+                print(f"Need {n} elements")
+                continue
+            try:
+                m.append([sp.sympify(e) for e in elements])
+                break
+            except:
+                print("Invalid elements")
+    return sp.Matrix(m)
+
+def show_results(mat):
+    eigvals = mat.eigenvals()
+    eigvecs = mat.eigenvects()
+    
+    print("\nEigenvalues:")
+    [print(f"λ = {sp.pretty(k)}") for k in eigvals.keys()]
+    
+    print("\nEigenvectors:")
+    for val, _, basis in eigvecs:
+        print(f"λ = {sp.pretty(val)}")
+        for i, b in enumerate(basis, 1):
+            vec = [sp.nsimplify(x) for x in b.T.tolist()[0]]
+            print(f"Vector {i}: {vec}")
+        print()
+
+def eigen_calculator():
+    n = get_matrix_size()
+    matrix = build_matrix(n)
+    show_results(matrix)
+
+eigen_calculator()
